@@ -31,7 +31,7 @@
 ```
 pip install -r requirements.txt
 ``` 
-- В папке с файлом manage.py выполните команду:
+- В папке с файлом main.py выполните команду:
 ```
 python main.py
 ```
