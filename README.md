@@ -10,15 +10,19 @@
 
 ### Запуск
 Клонируем репозиторий на локальную машину:
+
 `git clone https://github.com/DenisSivko/Wine_Shop.git`
 
 Создаем виртуальное окружение:
+
 `python -m venv venv`
 
 Устанавливаем зависимости:
+
 `pip install -r requirements.txt`
 
 Запуск:
+
 `python main.py`
 
 Перейдите на сайт по адресу [http://127.0.0.1:8000](http://127.0.0.1:8000).
