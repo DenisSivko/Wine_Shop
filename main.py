@@ -1,45 +1,44 @@
+import argparse
+from collections import defaultdict
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+import pandas
 from jinja2 import Environment, FileSystemLoader, select_autoescape
-import pandas as pd
 
-excel_data_df = pd.read_excel('wine2.xlsx', na_values=['N/A', 'NA'],
-                              keep_default_na=False)
 
-data = excel_data_df.to_dict()
-unique_category = []
-minimal_category = []
-minimal = max(data['Цена'].values())
-minimal_price = min(data['Цена'].values())
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file', nargs='?',
+                        default='wine', type=str)
+    args = parser.parse_args()
 
-env = Environment(
-    loader=FileSystemLoader('.'),
-    autoescape=select_autoescape(['html', 'xml'])
-)
+    excel_data_df = pandas.read_excel(
+        f'{args.file}.xlsx',
+        na_values=['N/A', 'NA'],
+        keep_default_na=False
+    )
+    wines = excel_data_df.to_dict(orient='records')
 
-template = env.get_template('templates/ListWine3.html')
+    groups_wines = defaultdict(list)
+    for wine in wines:
+        groups_wines[wine['Категория']].append(wine)
+    groups_wines = sorted(groups_wines.items())
 
-if 'Категория' in data:
-    template = env.get_template('templates/ListWine2.html')
-    for i in range(len(data['Категория'])):
-        if data['Категория'][i] not in unique_category:
-            unique_category.append(data['Категория'][i])
-    for category in unique_category:
-        for i in range(len(data['Цена'])):
-            if data['Категория'][i] == category:
-                if data['Цена'][i] <= minimal:
-                    minimal = data['Цена'][i]
-        minimal_category.append(minimal)
-        minimal = max(data['Цена'].values())
+    env = Environment(
+        loader=FileSystemLoader('.'),
+        autoescape=select_autoescape(['html', 'xml'])
+    )
+    template = env.get_template('template.html')
+    rendered_page = template.render(
+        assortment=groups_wines
+    )
 
-rendered_page = template.render(
-    data=data,
-    unique_category=unique_category,
-    minimal_price=minimal_price,
-    minimal_category=minimal_category,
-)
+    with open('index.html', 'w', encoding='utf8') as file:
+        file.write(rendered_page)
 
-with open('index.html', 'w', encoding="utf8") as file:
-    file.write(rendered_page)
+    server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
+    server.serve_forever()
 
-server = HTTPServer(('0.0.0.0', 8000), SimpleHTTPRequestHandler)
-server.serve_forever()
+
+if __name__ == '__main__':
+    main()
